@@ -10,7 +10,7 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 docker pull 763104351884.dkr.ecr.us-east-1.amazonaws.com/tensorflow-training:2.5.0-gpu-py37-cu112-ubuntu18.04
 
 # Download data
-#aws s3 cp --recursive s3://tinyml/data/ data
+aws s3 cp --recursive s3://tinyml/data/ data
 
 
 # Start the image
