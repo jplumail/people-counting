@@ -116,7 +116,7 @@ def split_ds(ds):
     valid_dataset = ds.take(val_size)
     return train_dataset, valid_dataset
 
-root = "s3://tinyml/"
+root = os.environ["DATA_DIR"]
 
 
 # Commented out IPython magic to ensure Python compatibility.

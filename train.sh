@@ -1,7 +1,12 @@
 #!/bin/bash
 
-export S3_REGION=us-east-1
+export DATA_DIR=/app/data/
 
-tensorboard --logdir=s3://tinyml/logs --host=0.0.0.0 --load_fast=false &
+tensorboard --logdir=$DATA_DIR/logs --host=0.0.0.0 --load_fast=false &
 
-python train.py
+python train.py &
+
+crontab -l > sync
+echo "@hourly aws s3 sync /app/data s3://tinyml/data" >> sync
+crontab sync
+rm sync
