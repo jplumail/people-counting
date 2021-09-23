@@ -134,12 +134,14 @@ valid_ds = create_ds(valid_ds, cache=False, batch=8, augment=False).cache()
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
 normalization_layer.adapt(train_ds.map(lambda x, y: x))
 
-log_dir = root + "logs/fit/"
+ts = datetime.datetime.now().strftime("%s")
+
+log_dir = root + "ShanghaiTechB/logs/" + ts + "/"
 file_writer_dm = tf.summary.create_file_writer(log_dir+"/density_map/")
  
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=(50,100), write_graph=False)
  
-checkpoint_path = root+"models/ccnn-shanghaitechB"
+checkpoint_path = root + "ShanghaiTechB/models/" + ts + "/"
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     monitor='val_loss',
