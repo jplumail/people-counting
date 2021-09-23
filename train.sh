@@ -2,7 +2,7 @@
 
 export DATA_DIR=/app/data/
 
-tensorboard --logdir=$DATA_DIR/logs --host=0.0.0.0 --load_fast=false &
+tensorboard --logdir=$DATA_DIR/ShanghaiTechB/logs --host=0.0.0.0 --load_fast=false &
 
 python train.py &
 
