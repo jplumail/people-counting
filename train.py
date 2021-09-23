@@ -123,8 +123,8 @@ root = os.environ["DATA_DIR"]
 # %load_ext tensorboard
 # %tensorboard --logdir logs/fit
 
-filenames_train = tf.data.Dataset.list_files("data/ShanghaiTechB/train_data/data-train*.tfrecords").take(1).shuffle(10)
-filenames_valid = tf.data.Dataset.list_files("data/ShanghaiTechB/train_data/data-valid*.tfrecords").take(1)
+filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-train*.tfrecords").take(1).shuffle(10)
+filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-valid*.tfrecords").take(1)
 train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
 valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
  
@@ -235,10 +235,12 @@ model.fit(
     epochs=10
 )
 
-filenames = tf.data.Dataset.list_files("data/ShanghaiTech/part_B/train_data/*.tfrecords")
+
+# Test the model
+filenames = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/test_data/*.tfrecords")
 test_ds = filenames.interleave(lambda x: tf.data.TFRecordDataset(x))
 test_ds = create_ds(test_ds, batch=1, augment=False)
 
 model.evaluate(test_ds)
 
-model.save("models/lcnn-shanghaitechB")
+model.save(root+"models/lcnn-shanghaitechB")
