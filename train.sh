@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install tensorboard_plugin_profile
+
 export DATA_DIR=/app/data/
 
 tensorboard --logdir=$DATA_DIR/ShanghaiTechB/logs --host=0.0.0.0 --load_fast=false &
