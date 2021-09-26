@@ -123,13 +123,13 @@ root = os.environ["DATA_DIR"]
 # %load_ext tensorboard
 # %tensorboard --logdir logs/fit
 
-filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-train*.tfrecords").take(1).shuffle(10)
-filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-valid*.tfrecords").take(1)
+filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-train*.tfrecords").shuffle(10)
+filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-valid*.tfrecords")
 train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
 valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
  
 train_ds = create_ds(train_ds, cache=True, shuffle=True, batch=8, augment=True)
-valid_ds = create_ds(valid_ds, cache=False, batch=8, augment=False).cache()
+valid_ds = create_ds(valid_ds, cache=True, batch=8, augment=False).cache()
 
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
 normalization_layer.adapt(train_ds.map(lambda x, y: x))
@@ -234,15 +234,15 @@ model.fit(
     validation_data=valid_ds,
     callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
     initial_epoch=0,
-    epochs=10
+    epochs=10000
 )
 
 
 # Test the model
-filenames = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/test_data/*.tfrecords")
+filenames = tf.data.Dataset.list_files(root+"ShanghaiTechB/test_data/*.tfrecords")
 test_ds = filenames.interleave(lambda x: tf.data.TFRecordDataset(x))
 test_ds = create_ds(test_ds, batch=1, augment=False)
 
 model.evaluate(test_ds)
 
-model.save(root+"models/lcnn-shanghaitechB")
+model.save(root+"models/ccnn-shanghaitechB")

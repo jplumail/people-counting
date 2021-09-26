@@ -9,5 +9,5 @@ python train.py &
 while true
 do
     aws s3 sync /app/data s3://tinyml/data
-    sleep 10
+    sleep 60
 done
