@@ -128,7 +128,7 @@ filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data
 train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
 valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
  
-train_ds = create_ds(train_ds, cache=True, shuffle=True, batch=64, augment=True)
+train_ds = create_ds(train_ds, cache=True, shuffle=True, batch=32, augment=True)
 valid_ds = create_ds(valid_ds, cache=True, batch=128, augment=False).cache()
 
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
