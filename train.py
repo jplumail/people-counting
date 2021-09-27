@@ -8,8 +8,6 @@ import os
 
 
 IMAGE_COUNT = 400
-nb_frames = 10
-nb_blocks = 3
 
 
 def count(density_map):
