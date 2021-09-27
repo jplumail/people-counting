@@ -134,7 +134,10 @@ valid_ds = create_ds(valid_ds, cache=True, batch=32, augment=False).cache()
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
 normalization_layer.adapt(train_ds.map(lambda x, y: x))
 
-ts = datetime.datetime.now().strftime("%s")
+if "CHECKPOINT" in os.environ:
+    ts = str(os.environ["CHECKPOINT"])
+else:
+    ts = datetime.datetime.now().strftime("%s")
 
 log_dir = root + "ShanghaiTechB/logs/" + ts + "/"
 file_writer_dm = tf.summary.create_file_writer(log_dir+"/density_map/")
@@ -221,7 +224,16 @@ def display_dm(epoch, logs):
  
 dm_callback = K.callbacks.LambdaCallback(on_epoch_end=display_dm)
 
-lr = 1e-3
+if "LR" in os.environ:
+    lr = float(os.environ["LR"])
+else:
+    lr = 1e-5
+
+if "INITIAL_EPOCH" in os.environ:
+    initial_epoch = int(os.environ["INITIAL_EPOCH"])
+else:
+    initial_epoch = 0
+
 model = build_ccnn(lr, normalization_layer)
  
 if os.path.exists(checkpoint_path):
@@ -233,7 +245,7 @@ model.fit(
     train_ds,
     validation_data=valid_ds,
     callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
-    initial_epoch=0,
+    initial_epoch=initial_epoch,
     epochs=10000
 )
 
