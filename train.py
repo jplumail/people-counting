@@ -140,7 +140,7 @@ else:
 log_dir = root + "ShanghaiTechB/logs/" + ts + "/"
 file_writer_dm = tf.summary.create_file_writer(log_dir+"/density_map/")
  
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=(50,100), write_graph=False)
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=0, write_graph=False)
  
 checkpoint_path = root + "ShanghaiTechB/models/" + ts + "/"
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
