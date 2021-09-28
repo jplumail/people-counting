@@ -244,7 +244,7 @@ model.fit(
     validation_data=valid_ds,
     callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
     initial_epoch=initial_epoch,
-    epochs=10000
+    epochs=30000
 )
 
 
