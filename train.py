@@ -127,7 +127,7 @@ train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
 valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
 
 if "BATCH_SIZE" in os.environ:
-    batch_size = os.environ["BATCH_SIZE"]
+    batch_size = int(os.environ["BATCH_SIZE"])
 else:
     batch_size = 8
  
