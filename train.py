@@ -237,6 +237,11 @@ if "INITIAL_EPOCH" in os.environ:
 else:
     initial_epoch = 0
 
+if "NB_EPOCHS" in os.environ:
+    nb_epochs = int(os.environ["NB_EPOCHS"]
+else:
+    nb_epochs = 50000
+
 model = build_ccnn(lr, normalization_layer)
  
 if os.path.exists(checkpoint_path):
@@ -249,7 +254,7 @@ model.fit(
     validation_data=valid_ds,
     callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
     initial_epoch=initial_epoch,
-    epochs=30000
+    epochs=nb_epochs
 )
 
 

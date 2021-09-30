@@ -3,11 +3,12 @@
 pip install tensorboard_plugin_profile
 
 export DATA_DIR=/app/data/
-export LR=0.0001
-export BATCH_SIZE=8
+export LR=0.00002
+export BATCH_SIZE=16
 
 export CHECKPOINT=1632763181
-export INITIAL_EPOCH=10001
+export INITIAL_EPOCH=27285
+export NB_EPOCHS=50000
 
 tensorboard --logdir=$DATA_DIR/ShanghaiTechB/logs --host=0.0.0.0 --load_fast=false &
 
