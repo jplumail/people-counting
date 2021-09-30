@@ -132,7 +132,7 @@ else:
     batch_size = 8
  
 train_ds = create_ds(train_ds, cache=True, shuffle=True, batch=batch_size, augment=True)
-valid_ds = create_ds(valid_ds, cache=True, batch=64, augment=False).cache()
+valid_ds = create_ds(valid_ds, cache=True, batch=32, augment=False).cache()
 
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
 normalization_layer.adapt(train_ds.map(lambda x, y: x))
