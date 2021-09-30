@@ -238,7 +238,7 @@ else:
     initial_epoch = 0
 
 if "NB_EPOCHS" in os.environ:
-    nb_epochs = int(os.environ["NB_EPOCHS"]
+    nb_epochs = int(os.environ["NB_EPOCHS"])
 else:
     nb_epochs = 50000
 
