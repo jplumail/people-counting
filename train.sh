@@ -3,7 +3,8 @@
 pip install tensorboard_plugin_profile
 
 export DATA_DIR=/app/data/
-export LR=0.00001
+export LR=0.0001
+export BATCH_SIZE=8
 
 export CHECKPOINT=1632763181
 export INITIAL_EPOCH=10001
