@@ -20,36 +20,22 @@ def mae_count(density_map_true, density_map_pred):
     return tf.math.reduce_mean(tf.math.abs(count(density_map_true) - count(density_map_pred)))
 
 image_feature_description = {
-    'height': tf.io.FixedLenFeature([], tf.int64),
-    'width': tf.io.FixedLenFeature([], tf.int64),
-    'image': tf.io.FixedLenFeature([], tf.string),
-    'points': tf.io.FixedLenFeature([], tf.string),
-    'density_map': tf.io.FixedLenFeature([], tf.string),
+    'data': tf.io.FixedLenFeature([], tf.string),
 }
 
-def _parse_image_function(example_proto):
+def _parse_example_function(example_proto):
   # Parse the input tf.train.Example proto using the dictionary above.
   return tf.io.parse_single_example(example_proto, image_feature_description)
 
 def to_tensor(datapoint):
-    image_raw = datapoint['image']
-    image = tf.image.decode_jpeg(image_raw)
-    if tf.shape(image)[2] == 1:
-        image = tf.image.grayscale_to_rgb(image)
+    data = tf.io.parse_tensor(datapoint['data'], tf.float32)
+    data = tf.ensure_shape(data, [None, None, 4])
+    return data
 
-    image = tf.cast(image, tf.float32) / 255.0 # Normalization
-    image = tf.ensure_shape(image, [None, None, 3])
-
-    density = tf.io.parse_tensor(datapoint['density_map'], tf.float64)
-    density = tf.ensure_shape(density, [None, None])
-    density = tf.cast(density, tf.float32)
-    
-    return image, density
-
-def resize_density(image, density):
+def resize_density(data):
+    image, density = data[...,:-1], data[...,-1:]
     shape = tf.shape(density)
-    newshape = [shape[-2]//8, shape[-1]//8]
-    density = tf.expand_dims(density, axis=-1)
+    newshape = [shape[-3]//8, shape[-2]//8]
     s1 = tf.reduce_sum(density, keepdims=True, axis=(-3,-2))
     density = tf.image.resize(density, newshape, method='bicubic', antialias=True)
     s2 = tf.reduce_sum(density, keepdims=True, axis=(-3,-2))
@@ -59,50 +45,43 @@ def resize_density(image, density):
 HEIGHT = 512
 WIDTH = 512
 
-def augment_data(image, density):
-    density = tf.expand_dims(density, axis=-1) # add a the channel dim
-    inputs = tf.concat([image, density], axis=-1)
-    
-    shape = tf.shape(image)
+def augment_data(data):
+    shape = tf.shape(data)
     if len(shape) == 4:
         batch_size = shape[0]
         batch = True
     else:
         batch_size = 1
-        inputs = tf.expand_dims(inputs, 0)
+        data = tf.expand_dims(data, 0)
         batch = False
     h, w = shape[-3], shape[-2]
     # Random crop
     if h < HEIGHT or w < WIDTH:
-        inputs = tf.image.resize(inputs, (HEIGHT, WIDTH))
+        data = tf.image.resize(data, (HEIGHT, WIDTH))
     else:
-        inputs = tf.image.random_crop(inputs, (batch_size, HEIGHT, WIDTH, 4))
+        data = tf.image.random_crop(data, (batch_size, HEIGHT, WIDTH, 4))
     
     # Random flip left-right
-    inputs = tf.image.random_flip_left_right(inputs)
+    data = tf.image.random_flip_left_right(data)
     
-    out_im = inputs[...,:3]
-    out_density = inputs[...,3]
-
     if not batch:
-        out_im = out_im[0]
-        out_density = out_density[0]
+        data = data[0]
 
-    return out_im, out_density
+    return data
 
 def create_tfrecords(root):
     for set_ in ["train", "test"]:
         create_data(os.path.join(root, "{}_data".format(set_)))
 
 def create_ds(ds, cache=False, shuffle=False, batch=1, augment=False):
-    ds = ds.map(_parse_image_function, num_parallel_calls=tf.data.AUTOTUNE)
+    ds = ds.map(_parse_example_function, num_parallel_calls=tf.data.AUTOTUNE)
     ds = ds.map(to_tensor, num_parallel_calls=tf.data.AUTOTUNE)
     if cache:
         ds = ds.cache()
     if shuffle:
         ds = ds.shuffle(100)
     ds = ds.batch(batch)
-    if augment:
+    if augment: # Change the size of the data
         ds = ds.map(augment_data, num_parallel_calls=tf.data.AUTOTUNE)
     ds = ds.map(resize_density, num_parallel_calls=tf.data.AUTOTUNE)
     ds = ds.prefetch(tf.data.AUTOTUNE)
@@ -114,25 +93,29 @@ def split_ds(ds):
     valid_dataset = ds.take(val_size)
     return train_dataset, valid_dataset
 
-root = os.environ["DATA_DIR"]
+if "DATA_DIR" in os.environ:
+    root = os.environ["DATA_DIR"] + "/"
+else:
+    root = "data/"
 
 
 # Commented out IPython magic to ensure Python compatibility.
 # %load_ext tensorboard
 # %tensorboard --logdir logs/fit
 
-filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-train*.tfrecords").shuffle(10)
-filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTechB/train_data/data-valid*.tfrecords")
+filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/train_data/tfrecords/*.tfrecords").shuffle(10)
+filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/test_data/tfrecords/*.tfrecords")
 train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
 valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
+
 
 if "BATCH_SIZE" in os.environ:
     batch_size = int(os.environ["BATCH_SIZE"])
 else:
     batch_size = 8
  
-train_ds = create_ds(train_ds, cache=True, shuffle=True, batch=batch_size, augment=True)
-valid_ds = create_ds(valid_ds, cache=True, batch=32, augment=False).cache()
+train_ds = create_ds(train_ds, cache=False, shuffle=True, batch=batch_size, augment=True)
+valid_ds = create_ds(valid_ds, cache=False, batch=8, augment=False).cache()
 
 normalization_layer = K.layers.experimental.preprocessing.Normalization()
 normalization_layer.adapt(train_ds.map(lambda x, y: x))
@@ -140,14 +123,16 @@ normalization_layer.adapt(train_ds.map(lambda x, y: x))
 if "CHECKPOINT" in os.environ:
     ts = str(os.environ["CHECKPOINT"])
 else:
-    ts = datetime.datetime.now().strftime("%s")
+    ts = datetime.datetime.now().strftime("%y%m%d%H%M%S")
 
-log_dir = root + "ShanghaiTechB/logs/" + ts + "/"
-file_writer_dm = tf.summary.create_file_writer(log_dir+"/density_map/")
+run_path = root + "ShanghaiTech/part_B/runs/" + ts + "/"
+log_dir = run_path + "logs/"
+file_writer_dm = tf.summary.create_file_writer(log_dir+"density_map/")
  
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=0, write_graph=False)
- 
-checkpoint_path = root + "ShanghaiTechB/models/" + ts + "/"
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=(50,100), write_graph=False)
+
+
+checkpoint_path = run_path + "checkpoints/"
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     monitor='val_loss',
@@ -259,10 +244,10 @@ model.fit(
 
 
 # Test the model
-filenames = tf.data.Dataset.list_files(root+"ShanghaiTechB/test_data/*.tfrecords")
-test_ds = filenames.interleave(lambda x: tf.data.TFRecordDataset(x))
-test_ds = create_ds(test_ds, batch=1, augment=False)
-
-model.evaluate(test_ds)
-
-model.save(root+"models/ccnn-shanghaitechB")
+#filenames = tf.data.Dataset.list_files(root+"ShanghaiTechB/test_data/*.tfrecords")
+#test_ds = filenames.interleave(lambda x: tf.data.TFRecordDataset(x))
+#test_ds = create_ds(test_ds, batch=1, augment=False)
+#
+#model.evaluate(test_ds)
+#
+#model.save(root+"models/ccnn-shanghaitechB")
