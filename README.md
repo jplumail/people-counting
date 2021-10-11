@@ -17,5 +17,5 @@ To train a model on an AWS, type `./start.sh`, it will launch a docker inside th
 
 Run `test.py`. It will create a directory with all of the density maps.
 
-![](docs/11-pred-170.2.png | width=400) ![](docs/11-gt-159.0.png | width=400)
+<img src="docs/11-pred-170.2.png" width="400"> <img src="docs/11-gt-159.0.png" width="400">
 *Prediction - Groundtruth density maps*
