@@ -1,20 +1,4 @@
-# This Python 3 environment comes with many helpful analytics libraries installed
-# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
-# For example, here's several helpful packages to load in
-
-import numpy as np  # linear algebra
-
-# Input data files are available in the "../input/" directory.
-# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
-
-import os
-
-# Any results you write to the current directory are saved as output.
-
-
-__author__ = "Thai Thien"
-__email__ = "tthien@apcs.vn"
-
+import numpy as np
 import os
 from tensorflow.keras.preprocessing import image
 import numpy as np
@@ -25,6 +9,7 @@ import h5py
 import time
 from joblib import Parallel, delayed
 import tensorflow as tf
+
 
 __DATASET_ROOT = "data/ShanghaiTech/"
 
@@ -143,9 +128,6 @@ def generate_shanghaitech_path(root):
 
 
 if __name__ == "__main__":
-    """
-    TODO: this file will preprocess crowd counting dataset
-    """
 
     start_time = time.time()
     a_train, a_test, b_train, b_test = generate_shanghaitech_path(__DATASET_ROOT)

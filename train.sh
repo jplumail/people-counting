@@ -6,7 +6,6 @@ export DATA_DIR=/app/data
 export LR=0.0001
 export BATCH_SIZE=8
 
-#export CHECKPOINT=1632763181
 export INITIAL_EPOCH=0
 export NB_EPOCHS=50000
 

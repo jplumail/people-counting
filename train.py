@@ -93,54 +93,6 @@ def split_ds(ds):
     valid_dataset = ds.take(val_size)
     return train_dataset, valid_dataset
 
-if "DATA_DIR" in os.environ:
-    root = os.environ["DATA_DIR"] + "/"
-else:
-    root = "data/"
-
-
-# Commented out IPython magic to ensure Python compatibility.
-# %load_ext tensorboard
-# %tensorboard --logdir logs/fit
-
-filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/train_data/tfrecords/*.tfrecords").shuffle(10)
-filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/test_data/tfrecords/*.tfrecords")
-train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
-valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
-
-
-if "BATCH_SIZE" in os.environ:
-    batch_size = int(os.environ["BATCH_SIZE"])
-else:
-    batch_size = 8
- 
-train_ds = create_ds(train_ds, cache=False, shuffle=True, batch=batch_size, augment=True)
-valid_ds = create_ds(valid_ds, cache=False, batch=8, augment=False).cache()
-
-normalization_layer = K.layers.experimental.preprocessing.Normalization()
-normalization_layer.adapt(train_ds.map(lambda x, y: x))
-
-if "CHECKPOINT" in os.environ:
-    ts = str(os.environ["CHECKPOINT"])
-else:
-    ts = datetime.datetime.now().strftime("%y%m%d%H%M%S")
-
-run_path = root + "ShanghaiTech/part_B/runs/" + ts + "/"
-log_dir = run_path + "logs/"
-file_writer_dm = tf.summary.create_file_writer(log_dir+"density_map/")
- 
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=(50,100), write_graph=False)
-
-
-checkpoint_path = run_path + "checkpoints/"
-model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_path,
-    monitor='val_loss',
-    mode='min',
-    save_weights_only=False,
-    verbose=1
-)
- 
 
 # https://arxiv.org/abs/1907.02198
 def build_lcnn(lr, preprocessing_layer):
@@ -209,45 +161,84 @@ def display_dm(epoch, logs):
             tf.summary.image("image 0", im, max_outputs=5, step=epoch)
             tf.summary.image("density gt 0", dm_gt, max_outputs=5, step=epoch)
         tf.summary.image("density pred 0", dm_pred, max_outputs=5, step=epoch)
- 
-dm_callback = K.callbacks.LambdaCallback(on_epoch_end=display_dm)
-
-if "LR" in os.environ:
-    lr = float(os.environ["LR"])
-else:
-    lr = 1e-5
-
-if "INITIAL_EPOCH" in os.environ:
-    initial_epoch = int(os.environ["INITIAL_EPOCH"])
-else:
-    initial_epoch = 0
-
-if "NB_EPOCHS" in os.environ:
-    nb_epochs = int(os.environ["NB_EPOCHS"])
-else:
-    nb_epochs = 50000
-
-model = build_ccnn(lr, normalization_layer)
- 
-if os.path.exists(checkpoint_path):
-    print("Loading model")
-    model = K.models.load_model(checkpoint_path, compile=True, custom_objects={"mae_count": mae_count, "mse_count": mse_count})
-    model.compile(optimizer=K.optimizers.Adam(learning_rate=lr), loss="MSE", metrics=[mae_count, mse_count])
- 
-model.fit(
-    train_ds,
-    validation_data=valid_ds,
-    callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
-    initial_epoch=initial_epoch,
-    epochs=nb_epochs
-)
 
 
-# Test the model
-#filenames = tf.data.Dataset.list_files(root+"ShanghaiTechB/test_data/*.tfrecords")
-#test_ds = filenames.interleave(lambda x: tf.data.TFRecordDataset(x))
-#test_ds = create_ds(test_ds, batch=1, augment=False)
-#
-#model.evaluate(test_ds)
-#
-#model.save(root+"models/ccnn-shanghaitechB")
+if __name__ == "__main__":
+
+    if "DATA_DIR" in os.environ:
+        root = os.environ["DATA_DIR"] + "/"
+    else:
+        root = "data/"
+
+    filenames_train = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/train_data/tfrecords/*.tfrecords").shuffle(10)
+    filenames_valid = tf.data.Dataset.list_files(root+"ShanghaiTech/part_B/test_data/tfrecords/*.tfrecords")
+    train_ds = filenames_train.interleave(lambda x: tf.data.TFRecordDataset(x))
+    valid_ds = filenames_valid.interleave(lambda x: tf.data.TFRecordDataset(x))
+
+
+    if "BATCH_SIZE" in os.environ:
+        batch_size = int(os.environ["BATCH_SIZE"])
+    else:
+        batch_size = 8
+    
+    train_ds = create_ds(train_ds, cache=False, shuffle=True, batch=batch_size, augment=True)
+    valid_ds = create_ds(valid_ds, cache=False, batch=8, augment=False).cache()
+
+    normalization_layer = K.layers.experimental.preprocessing.Normalization()
+    normalization_layer.adapt(train_ds.map(lambda x, y: x))
+
+    if "CHECKPOINT" in os.environ:
+        ts = str(os.environ["CHECKPOINT"])
+    else:
+        ts = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+
+    run_path = root + "ShanghaiTech/part_B/runs/" + ts + "/"
+    log_dir = run_path + "logs/"
+    file_writer_dm = tf.summary.create_file_writer(log_dir+"density_map/")
+    
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, profile_batch=(75,125), write_graph=False)
+
+
+    checkpoint_path = run_path + "checkpoints/"
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        monitor='val_loss',
+        mode='min',
+        save_weights_only=False,
+        verbose=1
+    )
+    
+
+
+    dm_callback = K.callbacks.LambdaCallback(on_epoch_end=display_dm)
+
+    if "LR" in os.environ:
+        lr = float(os.environ["LR"])
+    else:
+        lr = 1e-5
+
+    if "INITIAL_EPOCH" in os.environ:
+        initial_epoch = int(os.environ["INITIAL_EPOCH"])
+    else:
+        initial_epoch = 0
+
+    if "NB_EPOCHS" in os.environ:
+        nb_epochs = int(os.environ["NB_EPOCHS"])
+    else:
+        nb_epochs = 50000
+
+    # model = build_lcnn(lr, normalization_layer)
+    model = build_ccnn(lr, normalization_layer)
+    
+    if os.path.exists(checkpoint_path):
+        print("Loading model")
+        model = K.models.load_model(checkpoint_path, compile=True, custom_objects={"mae_count": mae_count, "mse_count": mse_count})
+        model.compile(optimizer=K.optimizers.Adam(learning_rate=lr), loss="MSE", metrics=[mae_count, mse_count])
+    
+    model.fit(
+        train_ds,
+        validation_data=valid_ds,
+        callbacks=[model_checkpoint_callback, tensorboard_callback, dm_callback],
+        initial_epoch=initial_epoch,
+        epochs=nb_epochs
+    )
