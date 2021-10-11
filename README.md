@@ -4,7 +4,7 @@ It provides trained weights as well as scripts to train it on an AWS VM.
 
 ### Installation
 
-`git clone https://github.com/jplumail/tinyML`
+`git clone https://github.com/jplumail/people-counting`
 
 Download the ShanghaiTech dataset [here](https://www.kaggle.com/tthien/shanghaitech).
 Unzip it under the data/ folder.
@@ -18,4 +18,4 @@ To train a model on an AWS, type `./start.sh`, it will launch a docker inside th
 Run `test.py`. It will create a directory with all of the density maps.
 
 <img src="docs/11-pred-170.2.png" width="400"> <img src="docs/11-gt-159.0.png" width="400">
-*Prediction - Groundtruth density maps*
+*Prediction/groundtruth density maps comparison, summing these yield the counting*
