@@ -1,3 +1,5 @@
+# Taken from https://www.kaggle.com/tthien/shanghaitech-with-people-density-map
+
 import numpy as np
 import os
 from tensorflow.keras.preprocessing import image
