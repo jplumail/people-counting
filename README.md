@@ -4,10 +4,14 @@ It provides trained weights as well as scripts to train it on an AWS VM.
 
 ### Installation
 
-`git clone https://github.com/jplumail/people-counting`
+```bash
+git clone https://github.com/jplumail/people-counting
+pip install -r requirements.txt
+```
 
 Download the ShanghaiTech dataset [here](https://www.kaggle.com/tthien/shanghaitech).
 Unzip it under the data/ folder.
+Launch the `density_gen.py` script to generate the density maps : `python density_gen.py`.
 
 ### Train
 
