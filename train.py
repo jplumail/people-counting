@@ -69,10 +69,6 @@ def augment_data(data):
 
     return data
 
-def create_tfrecords(root):
-    for set_ in ["train", "test"]:
-        create_data(os.path.join(root, "{}_data".format(set_)))
-
 def create_ds(ds, cache=False, shuffle=False, batch=1, augment=False):
     ds = ds.map(_parse_example_function, num_parallel_calls=tf.data.AUTOTUNE)
     ds = ds.map(to_tensor, num_parallel_calls=tf.data.AUTOTUNE)
